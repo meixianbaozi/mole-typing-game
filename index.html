@@ -1,158 +1,33 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>鼹鼠打字游戏</title>
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      font-family: 'Comic Sans MS', cursive, sans-serif;
-      height: 100%;
-      background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABgAAAAQACAIAAACoEwUVAAEAAElEQVR4nDT9S7Iry7K1hw1/RWQCc619rn62RKaCWsAOyUwFVdUl") no-repeat center center;
-      background-size: cover;
-    }
-
-    #game {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-    }
-
-    #holes {
-      position: relative;
-      width: 640px;
-      height: 400px;
-    }
-
-    .hole {
-      position: absolute;
-      width: 100px;
-      height: 100px;
-      overflow: hidden;
-      border-radius: 50%;
-    }
-
-    .mole {
-      position: absolute;
-      width: 80px;
-      left: 10px;
-      bottom: -80px;
-      transition: bottom 0.2s;
-    }
-
-    .mole.up {
-      bottom: 10px;
-    }
-
-    #score {
-      position: absolute;
-      top: 10px;
-      font-size: 24px;
-      color: #000;
-      background-color: rgba(255,255,255,0.7);
-      padding: 5px 10px;
-      border-radius: 10px;
-    }
-
-    #restart {
-      position: absolute;
-      bottom: 10px;
-      padding: 10px 20px;
-      font-size: 18px;
-      background: orange;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>鼹鼠打字</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div id="game">
-    <div id="score">得分：0</div>
-    <div id="holes"></div>
-    <button id="restart">重玩</button>
+  <div id="parallax">
+    <div class="layer layer-back"></div>
+    <div class="layer layer-mid"></div>
+    <div class="layer layer-front"></div>
   </div>
 
-  <img id="mole-img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFgAAABYCAYAAABV7bNHAAAACXBIWXMAAAsTAAALEwEAmpwYAAABy0lEQVR4nO3awU3DQBBA0fP/f3FV0kSwM8nLD6v0uRpQe6ePjz1MNixtYIAAAAAAAAAAKCc6RXMmOPb5zJ1tuu57nD6Xss6H+nTXXFthpbdN+ejLbmWhut5U+9ZK93EreNfc/X7+jvtnov6snmrTX3u2kk/mmdvVZL9PMblL7ef6Tzsy37+fpzU31ZmP6a+os1Ybd+zT13/f0P7ytxP13ZqNfvCdfqTyzb8o6M+uVb+f7us51+a43Hc8zzefrOHs3oAAAAAAAAAAOB5VxIBwiwq1AwAAAAASUVORK5CYII=" style="display:none;">
+  <header>
+    <h1>鼹鼠打字</h1>
+    <div id="scoreboard">
+      <span>分数：<span id="score">0</span></span>
+      <span>最高分：<span id="high-score">0</span></span>
+      <button id="restart">再玩一次</button>
+    </div>
+  </header>
 
-  <script>
-    const holesContainer = document.getElementById('holes');
-    const scoreDisplay = document.getElementById('score');
-    const restartBtn = document.getElementById('restart');
-    const moleImageSrc = document.getElementById('mole-img').src;
+  <main id="game-area"></main>
 
-    let score = 0;
-    let activeHole = null;
-    let gameInterval;
+  <!-- 音效 -->
+  <audio id="hit-sound" src="hit.mp3" preload="auto"></audio>
+  <audio id="miss-sound" src="miss.mp3" preload="auto"></audio>
 
-    const holePositions = [
-      { left: 90, top: 100 },
-      { left: 270, top: 100 },
-      { left: 450, top: 100 },
-      { left: 90, top: 250 },
-      { left: 270, top: 250 },
-      { left: 450, top: 250 },
-    ];
-
-    const letters = 'ASDFGH'.split('');
-    const holes = [];
-
-    for (let i = 0; i < 6; i++) {
-      const hole = document.createElement('div');
-      hole.className = 'hole';
-      hole.style.left = holePositions[i].left + 'px';
-      hole.style.top = holePositions[i].top + 'px';
-
-      const mole = document.createElement('img');
-      mole.className = 'mole';
-      mole.src = moleImageSrc;
-
-      hole.appendChild(mole);
-      holesContainer.appendChild(hole);
-      holes.push({ hole, mole, letter: letters[i] });
-    }
-
-    function randomHole() {
-      return holes[Math.floor(Math.random() * holes.length)];
-    }
-
-    function showMole() {
-      if (activeHole) {
-        activeHole.mole.classList.remove('up');
-      }
-      activeHole = randomHole();
-      activeHole.mole.classList.add('up');
-      scoreDisplay.innerText = `得分：${score}（按下字母：${activeHole.letter}）`;
-    }
-
-    function startGame() {
-      score = 0;
-      clearInterval(gameInterval);
-      gameInterval = setInterval(() => {
-        showMole();
-      }, 1500);
-    }
-
-    restartBtn.onclick = startGame;
-
-    document.addEventListener('keydown', e => {
-      if (!activeHole) return;
-      if (e.key.toUpperCase() === activeHole.letter) {
-        score++;
-        activeHole.mole.classList.remove('up');
-        activeHole = null;
-        scoreDisplay.innerText = `得分：${score}`;
-      }
-    });
-
-    startGame();
-  </script>
+  <script src="app.js"></script>
 </body>
 </html>
