@@ -3,79 +3,72 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>鼹鼠打字</title>
+  <title>鼹鼠打字游戏</title>
   <style>
     html, body {
       margin: 0;
       padding: 0;
+      overflow: hidden;
       font-family: 'Comic Sans MS', cursive, sans-serif;
-      background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAoAAAAHgCAYAAAAmnFIPAAAACXBIWXMAAAsTAAALEwEAmpwYAAAGk0lEQVR4nO3cMW7kNhRA0c4VaN8nJ8H+/1DWVY1pmZunN7oJK3fbDfZbA+zMtkUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADgU5nIFa/vfd3zDf0qP2t/P+fzeZqPPq+mflG8+Ncf3U59rXj5lxb9ePr5txflP6NP/75LzdvX1f6P5Of2Tf2POj7eXodEAAAAAAAAAIDu7Md3UlW/H4n6P+OdtfLeVR79c+P5myP6p7m9HXzfyo+J/9vP29yJ/0Zf9ev7/9X+b9HpTr95fux3+b0ek9m/vyR7fN1ejxH3+34rnmf7XMnxH0AAAAAAAAAAAB4zVHP3z0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAYK3zdAETAKLLkQAAAABJRU5ErkJggg==') no-repeat center center;
+      height: 100%;
+      background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABgAAAAQACAIAAACoEwUVAAEAAElEQVR4nDT9S7Iry7K1hw1/RWQCc619rn62RKaCWsAOyUwFVdUl") no-repeat center center;
       background-size: cover;
-      height: 100vh;
     }
 
     #game {
+      width: 100%;
+      height: 100%;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 100%;
-    }
-
-    #score {
-      font-size: 28px;
-      margin-bottom: 20px;
-      color: #333;
+      position: relative;
     }
 
     #holes {
-      display: grid;
-      grid-template-columns: repeat(3, 150px);
-      grid-template-rows: repeat(2, 150px);
-      gap: 30px;
-      margin-bottom: 20px;
+      position: relative;
+      width: 640px;
+      height: 400px;
     }
 
     .hole {
-      width: 120px;
-      height: 120px;
-      background: #654321;
-      border-radius: 50%;
-      position: relative;
+      position: absolute;
+      width: 100px;
+      height: 100px;
       overflow: hidden;
+      border-radius: 50%;
     }
 
     .mole {
-      width: 100px;
       position: absolute;
-      bottom: -100px;
+      width: 80px;
       left: 10px;
-      transition: bottom 0.2s ease;
+      bottom: -80px;
+      transition: bottom 0.2s;
     }
 
     .mole.up {
       bottom: 10px;
     }
 
-    .hammer {
-      width: 80px;
+    #score {
       position: absolute;
-      top: -80px;
-      left: 30px;
-      display: none;
-      transition: transform 0.2s ease;
-    }
-
-    .hammer.hit {
-      transform: rotate(45deg) translateY(60px);
+      top: 10px;
+      font-size: 24px;
+      color: #000;
+      background-color: rgba(255,255,255,0.7);
+      padding: 5px 10px;
+      border-radius: 10px;
     }
 
     #restart {
+      position: absolute;
+      bottom: 10px;
       padding: 10px 20px;
-      font-size: 20px;
+      font-size: 18px;
       background: orange;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       cursor: pointer;
     }
   </style>
@@ -87,47 +80,43 @@
     <button id="restart">重玩</button>
   </div>
 
-  <!-- 鼹鼠和锤子图像（Base64） -->
   <img id="mole-img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFgAAABYCAYAAABV7bNHAAAACXBIWXMAAAsTAAALEwEAmpwYAAABy0lEQVR4nO3awU3DQBBA0fP/f3FV0kSwM8nLD6v0uRpQe6ePjz1MNixtYIAAAAAAAAAAKCc6RXMmOPb5zJ1tuu57nD6Xss6H+nTXXFthpbdN+ejLbmWhut5U+9ZK93EreNfc/X7+jvtnov6snmrTX3u2kk/mmdvVZL9PMblL7ef6Tzsy37+fpzU31ZmP6a+os1Ybd+zT13/f0P7ytxP13ZqNfvCdfqTyzb8o6M+uVb+f7us51+a43Hc8zzefrOHs3oAAAAAAAAAAOB5VxIBwiwq1AwAAAAASUVORK5CYII=" style="display:none;">
-  <img id="hammer-img" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCAxMjggMTI4IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxjaXJjbGUgY3g9IjY0IiBjeT0iNjQiIHI9IjYwIiBmaWxsPSIjZjZjNTAwIi8+CiAgPHJlY3QgeD0iNTgiIHk9IjIwIiB3aWR0aD0iMTIiIGhlaWdodD0iNTAiIGZpbGw9IiM2NjYiIHJ4PSI2Ii8+CiAgPHJlY3QgeD0iNTgiIHk9IjcwIiB3aWR0aD0iMTIiIGhlaWdodD0iNDAiIGZpbGw9IiMzMzMiIHJ4PSI2Ii8+Cjwvc3ZnPg==" style="display:none;">
-
-  <!-- 音效（空白可替换） -->
-  <audio id="hit-sound"><source src="data:audio/wav;base64,UklGRjQAAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQAAAAA="></audio>
-  <audio id="miss-sound"><source src="data:audio/wav;base64,UklGRjQAAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQAAAAA="></audio>
 
   <script>
     const holesContainer = document.getElementById('holes');
     const scoreDisplay = document.getElementById('score');
     const restartBtn = document.getElementById('restart');
-    const hitSound = document.getElementById('hit-sound');
-    const missSound = document.getElementById('miss-sound');
     const moleImageSrc = document.getElementById('mole-img').src;
-    const hammerImageSrc = document.getElementById('hammer-img').src;
 
     let score = 0;
-    let speed = 1500;
     let activeHole = null;
     let gameInterval;
-    const letters = 'ASDFGHJKL'.split('');
+
+    const holePositions = [
+      { left: 90, top: 100 },
+      { left: 270, top: 100 },
+      { left: 450, top: 100 },
+      { left: 90, top: 250 },
+      { left: 270, top: 250 },
+      { left: 450, top: 250 },
+    ];
+
+    const letters = 'ASDFGH'.split('');
     const holes = [];
 
     for (let i = 0; i < 6; i++) {
       const hole = document.createElement('div');
       hole.className = 'hole';
+      hole.style.left = holePositions[i].left + 'px';
+      hole.style.top = holePositions[i].top + 'px';
 
       const mole = document.createElement('img');
       mole.className = 'mole';
       mole.src = moleImageSrc;
 
-      const hammer = document.createElement('img');
-      hammer.className = 'hammer';
-      hammer.src = hammerImageSrc;
-
       hole.appendChild(mole);
-      hole.appendChild(hammer);
       holesContainer.appendChild(hole);
-
-      holes.push({ hole, mole, hammer, letter: letters[i] });
+      holes.push({ hole, mole, letter: letters[i] });
     }
 
     function randomHole() {
@@ -135,8 +124,9 @@
     }
 
     function showMole() {
-      if (activeHole) activeHole.mole.classList.remove('up');
-
+      if (activeHole) {
+        activeHole.mole.classList.remove('up');
+      }
       activeHole = randomHole();
       activeHole.mole.classList.add('up');
       scoreDisplay.innerText = `得分：${score}（按下字母：${activeHole.letter}）`;
@@ -144,12 +134,10 @@
 
     function startGame() {
       score = 0;
-      speed = 1500;
       clearInterval(gameInterval);
       gameInterval = setInterval(() => {
         showMole();
-        if (speed > 500) speed -= 20;
-      }, speed);
+      }, 1500);
     }
 
     restartBtn.onclick = startGame;
@@ -157,21 +145,10 @@
     document.addEventListener('keydown', e => {
       if (!activeHole) return;
       if (e.key.toUpperCase() === activeHole.letter) {
-        hitSound.play();
         score++;
         activeHole.mole.classList.remove('up');
-
-        activeHole.hammer.style.display = 'block';
-        activeHole.hammer.classList.add('hit');
-        setTimeout(() => {
-          activeHole.hammer.classList.remove('hit');
-          activeHole.hammer.style.display = 'none';
-        }, 300);
-
         activeHole = null;
         scoreDisplay.innerText = `得分：${score}`;
-      } else {
-        missSound.play();
       }
     });
 
